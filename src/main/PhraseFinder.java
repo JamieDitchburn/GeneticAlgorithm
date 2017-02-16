@@ -1,6 +1,7 @@
 package main;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -53,10 +54,8 @@ public class PhraseFinder {
 			population.calcFitness();
 			matingPool = population.buildMatingPool(maxPopulation, currentBest);
 			currentBest = population.getCurrentBest();
-			System.out.println(currentBest.toString() + ", Score = " + population.getCurrentBest().getFitness() + ",  matingPool.size() = " + matingPool.size());
+			System.out.println(mutations + ": " + currentBest.toString() + ", Score = " + String.format("%.2f", population.getCurrentBest().getFitness()));
 		}
-		
-		System.out.println(mutations + " mutations.");
 	}
 
 	private static void initialise() {
@@ -67,6 +66,12 @@ public class PhraseFinder {
 	private static Population createNewPopulation() {
 		Population newPopulation = new Population(target, mutationRate, maxPopulation);
 
+		// Find average fitness of current generation
+		double avgFit = findAverageFitness();
+		
+		// Massacre half of the population that are deemed unfit
+		halvePopulation(avgFit);
+		
 		// Step 3
 		for (int i = 0; i < maxPopulation; i++) {
 			DNA parentA = pickRandomParent();
@@ -77,9 +82,35 @@ public class PhraseFinder {
 		return newPopulation;
 	}
 
+	private static void halvePopulation(double avgFit) {
+		Iterator<DNA> iterator = matingPool.iterator();
+		while(iterator.hasNext()) {
+			DNA dna = iterator.next();
+			if (dna.getFitness() < avgFit) {
+				iterator.remove();
+			}
+		}
+		
+	}
+
+	private static double findAverageFitness() {
+		double fitnessBuffer = 0;
+		for (DNA dna : matingPool) {
+			fitnessBuffer += dna.getFitness();
+		}
+		return fitnessBuffer / matingPool.size();
+	}
+
 	private static DNA pickRandomParent() {
-//		return matingPool.get(rand.nextInt(matingPool.size()));
-		int i = rand.nextInt(matingPool.size());
+		boolean shouldReturn = false;
+		int i = 0;
+		while(!shouldReturn) {
+			i = rand.nextInt(matingPool.size());
+			if (rand.nextDouble() < Math.pow(matingPool.get(i).getFitness(), 2)) {
+				shouldReturn = true;
+			}
+		}
+		
 		return matingPool.get(i);
 	}
 	

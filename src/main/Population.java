@@ -27,15 +27,11 @@ public class Population {
 	
 	public List<DNA> buildMatingPool(int maxPopulation, DNA previousBest) {
 		List<DNA> matingPool = new ArrayList<>();
-		for (int i = 0; i < maxPopulation; i++) {
+		for (int i = 0; i < maxPopulation - 1; i++) {
 			DNA dna = populationList.get(i);
-			for (int j = 0; j < ((int)(dna.getFitness() * 15) ^ 2); j++) {
-				matingPool.add(dna);
-			}
+			matingPool.add(dna);
 		}
-		for (int i = 0; i < 100; i++) {
-			matingPool.add(previousBest);
-		}
+		matingPool.add(previousBest);
 		return matingPool;
 	}
 
