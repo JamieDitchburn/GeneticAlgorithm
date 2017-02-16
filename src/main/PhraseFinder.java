@@ -66,20 +66,31 @@ public class PhraseFinder {
 	private static Population createNewPopulation() {
 		Population newPopulation = new Population(target, mutationRate, maxPopulation);
 
-		// Find average fitness of current generation
+		// Find average and maximum fitness of current generation
 		double avgFit = findAverageFitness();
+		double maxFit = findMaximumFitness();
 		
 		// Massacre half of the population that are deemed unfit
 		halvePopulation(avgFit);
 		
 		// Step 3
 		for (int i = 0; i < maxPopulation; i++) {
-			DNA parentA = pickRandomParent();
-			DNA parentB = pickRandomParent();
+			DNA parentA = pickRandomParent(avgFit, maxFit);
+			DNA parentB = pickRandomParent(avgFit, maxFit);
 			DNA child = parentA.reproduceWith(parentB, mutationRate);
 			newPopulation.addToPopulation(child);
 		}
 		return newPopulation;
+	}
+
+	private static double findMaximumFitness() {
+		double fitnessBuffer = 0;
+		for (DNA dna : matingPool) {
+			if (dna.getFitness() > fitnessBuffer) {
+				fitnessBuffer = dna.getFitness();
+			}
+		}
+		return fitnessBuffer;
 	}
 
 	private static void halvePopulation(double avgFit) {
@@ -101,12 +112,12 @@ public class PhraseFinder {
 		return fitnessBuffer / matingPool.size();
 	}
 
-	private static DNA pickRandomParent() {
+	private static DNA pickRandomParent(double avgFit, double maxFit) {
 		boolean shouldReturn = false;
 		int i = 0;
 		while(!shouldReturn) {
 			i = rand.nextInt(matingPool.size());
-			if (rand.nextDouble() < Math.pow(matingPool.get(i).getFitness(), 2)) {
+			if (rand.nextDouble() < ((matingPool.get(i).getFitness() - avgFit) / (maxFit - avgFit))) {		// Normalise. Avg (ie the lowest value) is set to 0, max is set to 1.
 				shouldReturn = true;
 			}
 		}
